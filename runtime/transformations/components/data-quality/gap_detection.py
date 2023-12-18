@@ -73,6 +73,9 @@ from datetime import datetime, timedelta, timezone
 
 import numpy as np
 import pandas as pd
+from pydantic import BaseModel, ValidationError, root_validator
+
+class 
 
 
 def constrict_series_to_dates(
