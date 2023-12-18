@@ -49,6 +49,8 @@ determined or given step size.
     - "start": Start index of the gap.
     - "end": End index of the gap.
     - ["gap": Size of the gap relative to the stepsize], optional if add_gapsize_column is True
+    # start/end inclusive?
+    # value_to_left & right Wert oder null; wenn beide ex.: Mittelwert aus L&R sonst null
 
 ## Raises
 
@@ -74,8 +76,6 @@ from datetime import datetime, timedelta, timezone
 import numpy as np
 import pandas as pd
 from pydantic import BaseModel, ValidationError, root_validator
-
-class 
 
 
 def constrict_series_to_dates(
