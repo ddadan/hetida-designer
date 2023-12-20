@@ -46,9 +46,14 @@ determined or given step size.
     A DataFrame containing the beginning and end timestamps of gaps larger than the determined or
     given step size.
     Columns are:
-    - "start": Start index of the gap.
-    - "end": End index of the gap.
+    - "start" (Timestamp): Start index of the gap.
+    - "end"(Timestamp): End index of the gap.
     - ["gap": Size of the gap relative to the stepsize], optional if add_gapsize_column is True
+    - "start_inclusive" (Boolean):
+    - "end_inclusive" (Boolean):
+    - "value_to_left":
+    - "value_to_right":
+    - "mean_left_right":
     # start/end inclusive?
     # value_to_left & right Wert oder null; wenn beide ex.: Mittelwert aus L&R sonst null
 
@@ -58,7 +63,7 @@ ValueError:
     - If start_date is greater than end_date.
     - If history_end_date is not between start_date and end_date.
 
-## Notes
+## Details
 
 The function follows these steps:
 1. Validate input.
