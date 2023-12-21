@@ -2,11 +2,11 @@
 
 # Gap Detection
 
+## Description
 Processes the given time series and returns the beginning and end timestamps of gaps larger than a
 determined or given step size.
 
-## Parameters
-
+## Inputs
 **timeseries** (Pandas Series):
     Expects datetime index.
 
@@ -40,8 +40,7 @@ determined or given step size.
 **min_amount_datapoints** :
     Minimum amount of datapoints required for a feasible result.
 
-## Returns
-
+## Outputs
 **gap_boundaries** (Pandas DataFrame) :
     A DataFrame containing the beginning and end timestamps of gaps larger than the determined or
     given step size.
