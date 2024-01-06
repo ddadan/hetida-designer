@@ -564,17 +564,48 @@ def freqstr2timedelta(freqstr: str) -> pd.Timedelta:
         return pd.to_timedelta(freqstr2dateoffset(freqstr))
 
 
+# ***** DO NOT EDIT LINES BELOW *****
+# These lines may be overwritten if component details or inputs/outputs change.
+COMPONENT_INFO = {
+    "inputs": {
+        "timeseries": {"data_type": "SERIES"},
+        "start_date_str": {"data_type": "ANY", "default_value": None},
+        "end_date_str": {"data_type": "ANY", "default_value": None},
+        "auto_stepsize": {"data_type": "BOOLEAN", "default_value": True},
+        "history_end_date_str": {"data_type": "ANY", "default_value": None},
+        "step_size_str": {"data_type": "ANY", "default_value": None},
+        "percentil": {"data_type": "INT", "default_value": 95},
+        "min_amount_datapoints": {"data_type": "INT", "default_value": 21},
+        "add_gapsize_column": {"data_type": "BOOLEAN", "default_value": True},
+    },
+    "outputs": {
+        "gap_boundaries": {"data_type": "DATAFRAME"},
+    },
+    "name": "Gap Detection",
+    "category": "Data Quality",
+    "description": "New created component",
+    "version_tag": "0.1.0",
+    "id": "9caff8af-3dcb-4b23-aa23-86dfa7e406c8",
+    "revision_group_id": "4ae5d3c6-9c3e-4ea6-a602-e927b470ba3c",
+    "state": "DRAFT",
+}
+
+
 def main(
-    timeseries: pd.Series,
-    start_date_str: str | None = None,
-    end_date_str: str | None = None,
-    auto_stepsize: bool = True,
-    history_end_date_str: str | None = None,
-    step_size_str: str | None = None,
-    percentil: int = 95,
-    min_amount_datapoints: int = 21,
+    *,
+    timeseries,
+    start_date_str=None,
+    end_date_str=None,
+    auto_stepsize=True,
+    history_end_date_str=None,
+    step_size_str=None,
+    percentil=95,
+    min_amount_datapoints=21,
     add_gapsize_column=True,
-) -> dict[str, pd.DataFrame]:
+):
+    # entrypoint function for this component
+    # ***** DO NOT EDIT LINES ABOVE *****
+    # write your function code here.
     """Example:
     --------
     >>> ts = pd.Series(
