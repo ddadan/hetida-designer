@@ -723,3 +723,89 @@ def main(
         gap_boundaries = add_gapsize_column_to_frame(gap_boundaries, df_with_gaps)
 
     return {"gap_boundaries": gap_boundaries}
+
+
+TEST_WIRING_FROM_PY_FILE_IMPORT = {
+    "input_wirings": [
+        {
+            "workflow_input_name": "timeseries",
+            "adapter_id": "direct_provisioning",
+            "use_default_value": False,
+            "filters": {
+                "value": (
+                    "{\n"
+                    '    "2020-01-01T01:15:00.000Z": 10.0,\n'
+                    '    "2020-01-01T01:16:00.000Z": 10.0,\n'
+                    '    "2020-01-01T01:17:00.000Z": 10.0,\n'
+                    '    "2020-01-01T01:18:00.000Z": 10.0,\n'
+                    '    "2020-01-01T01:19:00.000Z": 10.0,\n'
+                    '    "2020-01-01T01:20:00.000Z": 10.0,\n'
+                    '    "2020-01-01T01:21:00.000Z": 10.0,\n'
+                    '    "2020-01-02T16:20:00.000Z": 20.0,\n'
+                    '    "2020-01-02T16:21:00.000Z": 20.0,\n'
+                    '    "2020-01-02T16:22:00.000Z": 20.0,\n'
+                    '    "2020-01-02T16:23:00.000Z": 20.0,\n'
+                    '    "2020-01-02T16:24:00.000Z": 20.0,\n'
+                    '    "2020-01-02T16:25:00.000Z": 20.0,\n'
+                    '    "2020-01-02T16:26:00.000Z": 20.0,\n'
+                    '    "2020-01-03T08:20:00.000Z": 30.0,\n'
+                    '    "2020-01-03T08:21:04.000Z": 30.0,\n'
+                    '    "2020-01-03T08:22:00.000Z": 30.0,\n'
+                    '    "2020-01-03T08:23:04.000Z": 30.0,\n'
+                    '    "2020-01-03T08:24:00.000Z": 30.0,\n'
+                    '    "2020-01-03T08:25:04.000Z": 30.0,\n'
+                    '    "2020-01-03T08:26:06.000Z": 30.0\n'
+                    "}"
+                )
+            },
+        },
+        {
+            "workflow_input_name": "start_date_str",
+            "adapter_id": "direct_provisioning",
+            "use_default_value": False,
+            "filters": {"value": "2020-01-01T01:15:27.000Z"},
+        },
+        {
+            "workflow_input_name": "end_date_str",
+            "adapter_id": "direct_provisioning",
+            "use_default_value": False,
+            "filters": {"value": "2020-01-03T08:26:06.000Z"},
+        },
+        {
+            "workflow_input_name": "auto_stepsize",
+            "adapter_id": "direct_provisioning",
+            "use_default_value": False,
+            "filters": {"value": "True"},
+        },
+        {
+            "workflow_input_name": "history_end_date_str",
+            "adapter_id": "direct_provisioning",
+            "use_default_value": False,
+            "filters": {"value": "2020-01-01T01:21:00.000Z"},
+        },
+        {
+            "workflow_input_name": "step_size_str",
+            "adapter_id": "direct_provisioning",
+            "use_default_value": False,
+            "filters": {"value": "60s"},
+        },
+        {
+            "workflow_input_name": "percentil",
+            "adapter_id": "direct_provisioning",
+            "use_default_value": False,
+            "filters": {"value": "95"},
+        },
+        {
+            "workflow_input_name": "min_amount_datapoints",
+            "adapter_id": "direct_provisioning",
+            "use_default_value": False,
+            "filters": {"value": "21"},
+        },
+        {
+            "workflow_input_name": "add_gapsize_column",
+            "adapter_id": "direct_provisioning",
+            "use_default_value": False,
+            "filters": {"value": "True"},
+        },
+    ],
+}
