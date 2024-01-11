@@ -37,7 +37,7 @@ determined or given step size.
     consecutive data points.
     This is only relevant when auto_stepsize is True.
 
-**min_amount_datapoints** :
+**min_amount_datapoints** (Integer):
     Minimum amount of datapoints required for a feasible result.
 
 ## Outputs
@@ -80,6 +80,37 @@ from datetime import datetime, timedelta, timezone
 import numpy as np
 import pandas as pd
 from pydantic import BaseModel, ValidationError, root_validator
+
+from hetdesrun.runtime.exceptions import ComponentInputValidationException
+
+
+class GapDetectionParameters(BaseModel):
+    start_date_str: str
+    end_date_str: str
+    auto_stepsize: bool = True
+    history_end_date_str: str
+    step_size: str
+    percentil: float
+    min_amount_datapoints: int
+    add_gapsize_column: bool = True
+
+    @root_validator()
+    def verify_value_ranges(cls, values: dict) -> dict:
+        start = values["start"]
+        start_inclusive = values["start_inclusive"]
+        end = values["end"]
+        end_inclusive = values["end_inclusive"]
+        if end < start:
+            raise ValueError(
+                "To be valid, a time interval must be non-empty, i.e. the start timestamp "
+                "may not be later than the end timestamp."
+            )
+        if (start_inclusive is False or end_inclusive is False) and (start == end):
+            raise ValueError(
+                "To be valid, a time interval must be non-empty, i.e the start timestamp must be "
+                "not equal to the end timestamp, when at least one boundary is not inclusive."
+            )
+        return values
 
 
 def constrict_series_to_dates(
@@ -569,11 +600,11 @@ def freqstr2timedelta(freqstr: str) -> pd.Timedelta:
 COMPONENT_INFO = {
     "inputs": {
         "timeseries": {"data_type": "SERIES"},
-        "start_date_str": {"data_type": "ANY", "default_value": None},
-        "end_date_str": {"data_type": "ANY", "default_value": None},
+        "start_date_str": {"data_type": "STRING", "default_value": None},
+        "end_date_str": {"data_type": "STRING", "default_value": None},
         "auto_stepsize": {"data_type": "BOOLEAN", "default_value": True},
-        "history_end_date_str": {"data_type": "ANY", "default_value": None},
-        "step_size_str": {"data_type": "ANY", "default_value": None},
+        "history_end_date_str": {"data_type": "STRING", "default_value": None},
+        "step_size_str": {"data_type": "STRING", "default_value": None},
         "percentil": {"data_type": "INT", "default_value": 95},
         "min_amount_datapoints": {"data_type": "INT", "default_value": 21},
         "add_gapsize_column": {"data_type": "BOOLEAN", "default_value": True},
@@ -587,7 +618,8 @@ COMPONENT_INFO = {
     "version_tag": "0.1.0",
     "id": "9caff8af-3dcb-4b23-aa23-86dfa7e406c8",
     "revision_group_id": "4ae5d3c6-9c3e-4ea6-a602-e927b470ba3c",
-    "state": "DRAFT",
+    "state": "RELEASED",
+    "released_timestamp": "2024-01-10T09:26:09.131242+00:00",
 }
 
 
@@ -621,9 +653,7 @@ def main(
     timeseries = timeseries.dropna()
 
     if timeseries.empty:
-        raise ValueError(
-            "Input timeseries must be not empty for gap detection."
-        )  # grammatik, Zweck/Handlungsanweisung hinzufügen: check
+        raise ValueError("Input timeseries must be not empty for gap detection.")
 
     if start_date_str is None:
         try:
@@ -640,7 +670,7 @@ def main(
     except ValueError:  # TODO Errortyp überprüfen: check
         raise ValueError(
             "The date in start_date_str has to be formatted in iso format to allow conversion to datetime type for gap detection."
-        )  # TODO fehlermeldung: check
+        )
     except TypeError:
         raise TypeError(
             f"The start_date_str, possibly obtained from timeseries.attrs['start_date'], has to be of type str while it is of type {type(start_date_str)}."
