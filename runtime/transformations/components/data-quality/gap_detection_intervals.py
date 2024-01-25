@@ -1,6 +1,6 @@
-"""Documentation for component "Gap Detection"
+"""Documentation for component "Gap Detection Intervals"
 
-# Gap Detection
+# Gap Detection Intervals
 
 ## Description
 Processes the given time series and returns the beginning and end timestamps of gaps larger than a
@@ -84,6 +84,7 @@ from hetdesrun.runtime.exceptions import ComponentInputValidationException
 
 
 class GapDetectionParameters(BaseModel):
+    timeseries: pd.Series
     start_date: str  # pydantic kann auch direkt datetime, muss aber getestet werden
     end_date: str
     auto_stepsize: bool = True
@@ -93,7 +94,9 @@ class GapDetectionParameters(BaseModel):
     min_amount_datapoints: int
     add_gapsize_column: bool = True
 
-    @validator("start_date", "end_date")
+    @validator(
+        "start_date", "end_date"
+    )  # TODO was ist mit dem Fall Attribut der Zeitreihe?
     def verify_date_strings(cls, date) -> datetime:
         date = datetime.fromisoformat(date).replace(tzinfo=timezone.utc)
         return date
@@ -169,12 +172,22 @@ class GapDetectionParameters(BaseModel):
     @validator("min_amount_datapoints")
     def verify__min_amount_datapoints(cls, min_amount) -> int:
         if min_amount < 0:
-            raise ValueError(
+            raise ComponentInputValidationException(
                 "The minimum amount of datapoints has to be a non-negative integer.",
                 error_code=422,
                 invalid_component_inputs=["min_amount_datapoints"],
             )
         return min_amount
+
+    @validator("timeseries")
+    def verify_amount_datapoints_in_series(cls, series, values: dict) -> pd.Series:
+        min_amount = values["min_amount_datapoints"]
+        if len(series) < min_amount:
+            raise ValueError(
+                f"Timeseries must contain at least {min_amount} datapoints.",
+                error_code=422,
+                invalid_component_inputs=["timeseries"],
+            )
 
 
 def constrict_series_to_dates(
@@ -286,24 +299,6 @@ def add_gapsize_column_to_frame(
     return frame_with_gap_boundaries
 
 
-def generate_gaps_length_0(
-    gap_timestamps: pd.Series, add_gapsize_column: bool = True
-) -> pd.DataFrame:
-    length = len(gap_timestamps)
-    pseudo_series_0 = pd.Series(
-        [pd.Timedelta(seconds=0)] * length
-    )  # TODO timedelta in gap_boundaries
-
-    if add_gapsize_column:
-        new_gaps = pd.DataFrame(
-            {"start": gap_timestamps, "end": gap_timestamps, "gap": pseudo_series_0}
-        )
-    else:
-        new_gaps = pd.DataFrame({"start": gap_timestamps, "end": gap_timestamps})
-
-    return new_gaps
-
-
 def generate_gap_intervals(  # TODO anderer Funktionsname
     timeseries_data: pd.Series, gap_timestamps: pd.Series, add_gapsize_column: bool
 ) -> pd.DataFrame:
@@ -337,29 +332,6 @@ def generate_gap_intervals(  # TODO anderer Funktionsname
     return new_gaps
 
 
-def generate_gaps_from_freq_and_offset(
-    timeseries_data: pd.Series, start_timestamp: pd.Timestamp, count: int, freq_str: str
-) -> pd.DataFrame:
-    # under construction
-
-    new_gaps = pd.DataFrame()
-
-    date_rng = pd.date_range(
-        start=start_timestamp, periods=count, freq=freq_str
-    )  # was ist, wenn offset keine absolute timestamp, sondern zb "4 nach..."
-
-    missing_timestamps = []
-
-    for timestamp in date_rng:
-        if timestamp not in timeseries_data.index:
-            missing_timestamps.append(timestamp)
-
-    missing_timestamp_series = pd.Series(missing_timestamps)
-
-    # siehe gleitender Mittelwert
-    return generate_gaps_length_0(missing_timestamp_series)
-
-
 def freqstr2dateoffset(freqstr: str) -> pd.DateOffset:
     """Transform frequency string to Pandas DateOffset."""
     return pd.tseries.frequencies.to_offset(freqstr)
@@ -390,10 +362,10 @@ COMPONENT_INFO = {
     "outputs": {
         "gap_boundaries": {"data_type": "DATAFRAME"},
     },
-    "name": "Gap Detection",
+    "name": "Gap Detection Intervals",
     "category": "Data Quality",
-    "description": "New created component",
-    "version_tag": "0.1.0",
+    "description": "Determine gaps in the input series and return gap intervals",
+    "version_tag": "0.1.1",
     "id": "9caff8af-3dcb-4b23-aa23-86dfa7e406c8",
     "revision_group_id": "4ae5d3c6-9c3e-4ea6-a602-e927b470ba3c",
     "state": "RELEASED",
@@ -420,6 +392,7 @@ def main(
     timeseries = timeseries.dropna()
 
     input_params = GapDetectionParameters(
+        timeseries=timeseries,
         start_date_str=start_date_str,
         end_date_str=end_date_str,
         auto_stepsize=auto_stepsize,
@@ -430,19 +403,9 @@ def main(
         add_gapsize_column=add_gapsize_column,
     )
 
-    if timeseries.empty:
-        raise ValueError("Input timeseries must be not empty for gap detection.")
-
-    if (
-        check_amount_datapoints(timeseries, min_amount_datapoints) is False
-    ):  # null werte ignorieren: werden schon vorher entfernt.
-        raise ValueError(
-            f"Timeseries must contain at least {min_amount_datapoints} datapoints"
-        )
-
     constricted_series = constrict_series_to_dates(
         timeseries, input_params.start_date, input_params.end_date
-    )
+    )  # TODO was ist, wenn dadurch Prüfung auf mindestanzahl umgangen wird?
     if auto_stepsize:
         if input_params.history_end_date is not None:
             training_series = constrict_series_to_dates(
@@ -471,7 +434,6 @@ TEST_WIRING_FROM_PY_FILE_IMPORT = {
         {
             "workflow_input_name": "timeseries",
             "adapter_id": "direct_provisioning",
-            "use_default_value": False,
             "filters": {
                 "value": (
                     "{\n"
@@ -503,49 +465,41 @@ TEST_WIRING_FROM_PY_FILE_IMPORT = {
         {
             "workflow_input_name": "start_date_str",
             "adapter_id": "direct_provisioning",
-            "use_default_value": False,
             "filters": {"value": "2020-01-01T01:15:27.000Z"},
         },
         {
             "workflow_input_name": "end_date_str",
             "adapter_id": "direct_provisioning",
-            "use_default_value": False,
             "filters": {"value": "2020-01-03T08:26:06.000Z"},
         },
         {
             "workflow_input_name": "auto_stepsize",
             "adapter_id": "direct_provisioning",
-            "use_default_value": False,
             "filters": {"value": "True"},
         },
         {
             "workflow_input_name": "history_end_date_str",
             "adapter_id": "direct_provisioning",
-            "use_default_value": False,
             "filters": {"value": "2020-01-01T01:21:00.000Z"},
         },
         {
             "workflow_input_name": "step_size_str",
             "adapter_id": "direct_provisioning",
-            "use_default_value": False,
             "filters": {"value": "60s"},
         },
         {
             "workflow_input_name": "percentil",
             "adapter_id": "direct_provisioning",
-            "use_default_value": False,
             "filters": {"value": "95"},
         },
         {
             "workflow_input_name": "min_amount_datapoints",
             "adapter_id": "direct_provisioning",
-            "use_default_value": False,
             "filters": {"value": "21"},
         },
         {
             "workflow_input_name": "add_gapsize_column",
             "adapter_id": "direct_provisioning",
-            "use_default_value": False,
             "filters": {"value": "True"},
         },
     ],
