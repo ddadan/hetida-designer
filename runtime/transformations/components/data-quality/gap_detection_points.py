@@ -10,29 +10,7 @@ determined or given step size.
 **timeseries** (Pandas Series):
     Expects datetime index.
 
-**start_date_str** (String):
-    Desired start date of the processing range. Expexcts iso format. If =None, there has to be an
-    attribute `start_date` containing the start date as string.
-
-**end_date_str** (String):
-    Desired end date of the processing range. Expexcts iso format. If =None, `timeseries` has to
-    have an attribute `start_date` containing the start date as string.
-
-**history_end_date_str** (String):
-    Expects a date between start_date and end_date in iso format.
-    The desired end date for the training data used to determine the step unit.
-    This is only relevant when auto_stepsize is True. If not specified, the entire
-    `constricted_series` is used.
-
-**step_size** (String):
-    Must be not None, when auto_stepsize == False.
-    The expected time step unit between consecutive timestamps in the time series.
-
-**percentil** (Float):
-    Expects value >= 0 & <= 100.
-    The pecentile value to use for automatic determination of the expected gapsize between two
-    consecutive data points.
-    This is only relevant when auto_stepsize is True.
+**erkannte lücken** [...]
 
 ## Outputs
 **gaps** (Pandas DataFrame) :
