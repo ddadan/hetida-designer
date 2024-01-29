@@ -226,22 +226,6 @@ def check_add_boundary_dates(
     return timeseries
 
 
-def check_length_timeseries(
-    timeseries_data: pd.Series | pd.DataFrame, stepsize=timedelta(minutes=1)
-) -> bool:
-    start_date = timeseries_data.index[0]
-    end_date = timeseries_data.index[-1]
-
-    length_timeseries = end_date - start_date
-
-    is_longer = len(timeseries_data) >= 365
-
-    if is_longer:
-        is_longer = length_timeseries >= (pd.Timedelta(days=365) - stepsize)
-
-    return is_longer
-
-
 # TODO als fehlerhaft markierte Werte aussortieren (nicht hier)
 
 
@@ -293,41 +277,6 @@ def add_gapsize_column_to_frame(
     )
 
     return frame_with_gap_boundaries
-
-
-def generate_gap_intervals(  # TODO anderer Funktionsname
-    timeseries_data: pd.Series,
-    gap_timestamps: pd.Series,
-    add_gapsize_column: bool = True,
-) -> pd.DataFrame:
-    start_stamps = []
-    end_stamps = []
-    gap_sizes = []
-
-    for timestamp in gap_timestamps:
-        prev_index = None
-        next_index = None
-
-        # TODO geht das auch eleganter?
-        with contextlib.suppress(IndexError):
-            prev_index = timeseries_data[timeseries_data.index < timestamp].index[-1]
-        with contextlib.suppress(IndexError):
-            next_index = timeseries_data[timeseries_data.index > timestamp].index[0]
-
-        # TODO was ist mit None?
-
-        start_stamps.append(prev_index)
-        end_stamps.append(next_index)
-        gap_sizes.append(next_index - prev_index)
-
-    if add_gapsize_column is True:
-        new_gaps = pd.DataFrame(
-            {"start": start_stamps, "end": end_stamps, "gap": gap_sizes}
-        )
-    else:
-        new_gaps = pd.DataFrame({"start": start_stamps, "end": end_stamps})
-
-    return new_gaps
 
 
 def freqstr2dateoffset(freqstr: str) -> pd.DateOffset:

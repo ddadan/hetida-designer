@@ -93,6 +93,41 @@ def generate_gaps_from_freq_and_offset(
     return generate_gaps_length_0(missing_timestamp_series)
 
 
+def generate_gap_intervals(  # TODO anderer Funktionsname
+    timeseries_data: pd.Series,
+    gap_timestamps: pd.Series,
+    add_gapsize_column: bool = True,
+) -> pd.DataFrame:
+    start_stamps = []
+    end_stamps = []
+    gap_sizes = []
+
+    for timestamp in gap_timestamps:
+        prev_index = None
+        next_index = None
+
+        # TODO geht das auch eleganter?
+        with contextlib.suppress(IndexError):
+            prev_index = timeseries_data[timeseries_data.index < timestamp].index[-1]
+        with contextlib.suppress(IndexError):
+            next_index = timeseries_data[timeseries_data.index > timestamp].index[0]
+
+        # TODO was ist mit None?
+
+        start_stamps.append(prev_index)
+        end_stamps.append(next_index)
+        gap_sizes.append(next_index - prev_index)
+
+    if add_gapsize_column is True:
+        new_gaps = pd.DataFrame(
+            {"start": start_stamps, "end": end_stamps, "gap": gap_sizes}
+        )
+    else:
+        new_gaps = pd.DataFrame({"start": start_stamps, "end": end_stamps})
+
+    return new_gaps
+
+
 def freqstr2dateoffset(freqstr: str) -> pd.DateOffset:
     """Transform frequency string to Pandas DateOffset."""
     return pd.tseries.frequencies.to_offset(freqstr)
