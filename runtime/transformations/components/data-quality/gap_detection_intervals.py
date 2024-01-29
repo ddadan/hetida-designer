@@ -94,6 +94,26 @@ class GapDetectionParameters(BaseModel):
     min_amount_datapoints: int
     add_gapsize_column: bool = True
 
+    @validator("min_amount_datapoints")
+    def verify__min_amount_datapoints(cls, min_amount) -> int:
+        if min_amount < 0:
+            raise ComponentInputValidationException(
+                "The minimum amount of datapoints has to be a non-negative integer.",
+                error_code=422,
+                invalid_component_inputs=["min_amount_datapoints"],
+            )
+        return min_amount
+
+    @validator("timeseries")
+    def verify_amount_datapoints_in_series(cls, series, values: dict) -> pd.Series:
+        min_amount = values["min_amount_datapoints"]
+        if len(series) < min_amount:
+            raise ValueError(
+                f"Timeseries must contain at least {min_amount} datapoints.",
+                error_code=422,
+                invalid_component_inputs=["timeseries"],
+            )
+
     @validator(
         "start_date", "end_date"
     )  # TODO was ist mit dem Fall Attribut der Zeitreihe?
@@ -148,7 +168,7 @@ class GapDetectionParameters(BaseModel):
             history_end_date = None
         return history_end_date
 
-    @validator("step_size_str")
+    @validator("step_size_str")  # TODO auf freq string überprüfen
     def verify_step_size(cls, step_size, values: dict) -> str:
         auto_stepsize = values["auto_stepsize"]
         if (auto_stepsize is False) and (step_size is None):
@@ -168,26 +188,6 @@ class GapDetectionParameters(BaseModel):
                 invalid_component_inputs=["percentil"],
             )
         return percentil
-
-    @validator("min_amount_datapoints")
-    def verify__min_amount_datapoints(cls, min_amount) -> int:
-        if min_amount < 0:
-            raise ComponentInputValidationException(
-                "The minimum amount of datapoints has to be a non-negative integer.",
-                error_code=422,
-                invalid_component_inputs=["min_amount_datapoints"],
-            )
-        return min_amount
-
-    @validator("timeseries")
-    def verify_amount_datapoints_in_series(cls, series, values: dict) -> pd.Series:
-        min_amount = values["min_amount_datapoints"]
-        if len(series) < min_amount:
-            raise ValueError(
-                f"Timeseries must contain at least {min_amount} datapoints.",
-                error_code=422,
-                invalid_component_inputs=["timeseries"],
-            )
 
 
 def constrict_series_to_dates(
@@ -242,17 +242,13 @@ def check_length_timeseries(
     return is_longer
 
 
-def check_amount_datapoints(  # TODO als fehlerhaft markierte Werte aussortieren (nicht hier)
-    timeseries_data: pd.Series | pd.DataFrame,
-    min_amount: int = 365,
-) -> bool:
-    return len(timeseries_data) >= min_amount
+# TODO als fehlerhaft markierte Werte aussortieren (nicht hier)
 
 
 def determine_gap_length(
     timeseries: pd.Series, stepsize=timedelta(minutes=1)
 ) -> pd.DataFrame:
-    gaps = timeseries.index.to_series().diff().to_numpy()  # TODO oder .values?
+    gaps = timeseries.index.to_series().diff().to_numpy()
 
     stepsize_seconds = stepsize.total_seconds()
 
@@ -300,7 +296,9 @@ def add_gapsize_column_to_frame(
 
 
 def generate_gap_intervals(  # TODO anderer Funktionsname
-    timeseries_data: pd.Series, gap_timestamps: pd.Series, add_gapsize_column: bool
+    timeseries_data: pd.Series,
+    gap_timestamps: pd.Series,
+    add_gapsize_column: bool = True,
 ) -> pd.DataFrame:
     start_stamps = []
     end_stamps = []
@@ -322,7 +320,7 @@ def generate_gap_intervals(  # TODO anderer Funktionsname
         end_stamps.append(next_index)
         gap_sizes.append(next_index - prev_index)
 
-    if add_gapsize_column:
+    if add_gapsize_column is True:
         new_gaps = pd.DataFrame(
             {"start": start_stamps, "end": end_stamps, "gap": gap_sizes}
         )
