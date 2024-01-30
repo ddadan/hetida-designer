@@ -18,7 +18,7 @@ determined or given step size.
     Desired end date of the processing range. Expexcts iso format. If =None, `timeseries` has to
     have an attribute `start_date` containing the start date as string.
 
-**auto_stepsize** (Bool):
+**auto_stepsize** (Boolean):
     If True, the function will automatically determine the step unit based on the timeseries data.
 
 **history_end_date_str** (String):
@@ -37,7 +37,7 @@ determined or given step size.
     consecutive data points.
     This is only relevant when auto_stepsize is True.
 
-**min_amount_datapoints** (Integer):
+**min_amount_datapoints** (Int):
     Minimum amount of datapoints required for a feasible result.
 
 ## Outputs

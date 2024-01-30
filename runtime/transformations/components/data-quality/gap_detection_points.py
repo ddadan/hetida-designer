@@ -93,7 +93,7 @@ def generate_gaps_from_freq_and_offset(
     return generate_gaps_length_0(missing_timestamp_series)
 
 
-def generate_gap_intervals(  # TODO anderer Funktionsname
+def generate_gap_intervals_from_timestamps(
     timeseries_data: pd.Series,
     gap_timestamps: pd.Series,
     add_gapsize_column: bool = True,
