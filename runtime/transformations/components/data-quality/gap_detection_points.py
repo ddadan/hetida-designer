@@ -10,7 +10,9 @@ determined or given step size.
 **timeseries** (Pandas Series):
     Expects datetime index.
 
-**erkannte lücken** [...]
+**erkannte lücken** DataFrame aus Gap Detection Intervals
+
+ [...]
 
 ## Outputs
 **gaps** (Pandas DataFrame) :
